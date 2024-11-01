@@ -1,5 +1,7 @@
 package global.govstack.communication_service.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import global.govstack.communication_service.dto.EndUserResponseDto;
 import global.govstack.communication_service.dto.InternalTextDto;
 import global.govstack.communication_service.dto.RapidProBroadcastRequestDto;
@@ -22,26 +24,29 @@ public class RapidProAPi {
 
     private final HttpHeaders httpHeaders;
     private final APIUtil apiUtil;
+    private final ObjectMapper mapper;
 
-    @Value("${rapid-pro.url}")
-    private String RAPID_PRO_URL;
+    @Value("${rapid-pro.flow.url}")
+    private String RAPID_PRO_FLOW_URL;
 
     @Value("${rapid-pro.token}")
     private String AUTH_TOKEN;
 
 
-    public RapidProAPi(APIUtil apiUtil) {
+    public RapidProAPi(APIUtil apiUtil, ObjectMapper mapper) {
         this.apiUtil = apiUtil;
+        this.mapper = mapper;
         httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-        httpHeaders.add("Authorization", "Token " + AUTH_TOKEN);
+
     }
 
-    public void sendMessage(String broadcastMessage, List<EndUserResponseDto> recipients) {
-        final RapidProBroadcastRequestDto broadcast = this.buildRapidProMessage(broadcastMessage, recipients);
-        log.info("Sending a message to RapidPro:  {}", broadcast);
+    public void sendMessage(String broadcastMessage, String flowUUID, List<EndUserResponseDto> recipients) {
+        final String broadcast = this.buildRapidProMessage(broadcastMessage, flowUUID, recipients);
         try {
-            final String response = this.apiUtil.callAPI(RAPID_PRO_URL, HttpMethod.POST, httpHeaders, broadcast, String.class).getBody();
+            log.info("Sending a message to RapidPro:  {}", broadcast);
+            httpHeaders.add("Authorization", String.format("Token %s", AUTH_TOKEN));
+            final String response = this.apiUtil.callAPI(RAPID_PRO_FLOW_URL, HttpMethod.POST, httpHeaders, broadcast, String.class).getBody();
             log.info(response);
         } catch (Exception ex) {
             log.error(ex.getMessage());
@@ -49,14 +54,20 @@ public class RapidProAPi {
         }
     }
 
-    private RapidProBroadcastRequestDto buildRapidProMessage(String broadcastMessage, List<EndUserResponseDto> recipients) {
-        final InternalTextDto textDto = InternalTextDto.builder().text(broadcastMessage).build();
-        return RapidProBroadcastRequestDto.builder()
-                .message(textDto)
-                .urns(List.of("tel:"))
-                .baseLanguage("eng")
-                .groups(Collections.emptyList())
-                .contacts(recipients.stream().map(EndUserResponseDto::phoneNumber).collect(Collectors.toList()))
-                .build();
+    private String buildRapidProMessage(String broadcastMessage, String flowUUID, List<EndUserResponseDto> recipients) {
+        log.info("Building RapidPro message");
+        final InternalTextDto textDto = InternalTextDto.builder().description(broadcastMessage).build();
+        try {
+            return this.mapper.writeValueAsString(RapidProBroadcastRequestDto.builder()
+                    .flowUUID(flowUUID)
+                    .extra(textDto)
+                    .urns(recipients.stream().map(EndUserResponseDto::phoneNumber).collect(Collectors.toList()))
+                    .baseLanguage("eng")
+                    .groups(Collections.emptyList())
+                    .contacts(Collections.emptyList())
+                    .build());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Something went wrong with building the RP message" + e);
+        }
     }
 }

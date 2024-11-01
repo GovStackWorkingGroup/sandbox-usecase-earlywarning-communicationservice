@@ -1,22 +1,13 @@
 package global.govstack.communication_service.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
 import java.util.List;
 
 @Builder
-public record RapidProBroadcastRequestDto(List<String> urns, List<String> contacts, InternalTextDto message,
+public record RapidProBroadcastRequestDto(@JsonProperty("flow") String flowUUID, List<String> urns,
+                                          List<String> contacts, InternalTextDto extra,
                                           List<String> groups, String baseLanguage) {
-
-//    @JsonProperty("urns")
-//    private List<String> urns;
-//    @JsonProperty("contacts")
-//    private List<String> contacts;
-//    @JsonProperty("text")
-//    private InternalTextDto text;
-//    @JsonProperty("groups")
-//    private List<String> groups;
-//    @JsonProperty("base_language")
-//    private String baseLanguage;
 }

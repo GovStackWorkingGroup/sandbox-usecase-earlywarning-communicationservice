@@ -39,7 +39,7 @@ public class UserServiceApi {
             log.info(response.getBody());
             return mapper.readValue(response.getBody(), new TypeReference<>() {});
         } catch (Exception ex) {
-            log.error(ex.getMessage());
+            log.error("Something went wrong with user-service cross-connection: " + ex.getMessage());
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
         }
     }

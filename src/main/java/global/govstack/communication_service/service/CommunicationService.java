@@ -1,5 +1,7 @@
 package global.govstack.communication_service.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import global.govstack.communication_service.api.RapidProAPi;
 import global.govstack.communication_service.api.UserServiceApi;
 import global.govstack.communication_service.dto.EndUserResponseDto;
@@ -15,16 +17,19 @@ public class CommunicationService {
 
     private final RapidProAPi rapidProAPi;
     private final UserServiceApi userServiceApi;
+    private final ObjectMapper mapper;
 
-    public CommunicationService(RapidProAPi rapidProAPi, UserServiceApi userServiceApi) {
+    public CommunicationService(RapidProAPi rapidProAPi, UserServiceApi userServiceApi, ObjectMapper mapper) {
         this.rapidProAPi = rapidProAPi;
         this.userServiceApi = userServiceApi;
+        this.mapper = mapper;
     }
 
     public void handleIncomingBroadcastFromIM(String broadcastMessage) {
+        log.info("Handling message from broadcast-topic: " + broadcastMessage);
         final IncomingBroadcastMessageDto broadcast = this.mapIncomingMessage(broadcastMessage);
         final List<EndUserResponseDto> endUsers = this.fetchEndUsersForBroadcast(broadcast.countryId(), broadcast.countyId());
-        this.rapidProAPi.sendMessage(broadcastMessage, endUsers);
+        this.rapidProAPi.sendMessage(broadcast.textPrimaryLang(), broadcast.flowUUID(), endUsers);
     }
 
     private List<EndUserResponseDto> fetchEndUsersForBroadcast(int countryId, int countyId) {
@@ -32,6 +37,11 @@ public class CommunicationService {
     }
 
     private IncomingBroadcastMessageDto mapIncomingMessage(String broadcastMessage) {
-        return IncomingBroadcastMessageDto.builder().build();
+        try {
+            return this.mapper.readValue(broadcastMessage, IncomingBroadcastMessageDto.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Mapping incoming message failed" + e);
+        }
+
     }
 }
