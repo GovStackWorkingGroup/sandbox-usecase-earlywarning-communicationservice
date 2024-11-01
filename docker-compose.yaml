@@ -1,0 +1,15 @@
+version: '3.3'
+
+services:
+  backend:
+    container_name: communication-service
+    build:
+      context: .
+    ports:
+      - '8081:8081'
+    networks:
+      - shared_network
+
+networks:
+  shared_network:
+    external: true
