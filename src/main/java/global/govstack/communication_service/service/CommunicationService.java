@@ -32,7 +32,7 @@ public class CommunicationService {
         this.rapidProAPi.sendMessage(broadcast.textPrimaryLang(), broadcast.flowUUID(), endUsers);
     }
 
-    private List<EndUserResponseDto> fetchEndUsersForBroadcast(int countryId, int countyId) {
+    private List<EndUserResponseDto> fetchEndUsersForBroadcast(int countryId, List<Integer> countyId) {
         return this.userServiceApi.getEndUsers(countryId, countyId);
     }
 

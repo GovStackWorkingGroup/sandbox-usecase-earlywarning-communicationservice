@@ -30,7 +30,7 @@ public class UserServiceApi {
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
     }
 
-    public List<EndUserResponseDto> getEndUsers(int countryId, int countyId) {
+    public List<EndUserResponseDto> getEndUsers(int countryId, List<Integer> countyId) {
         log.info("Fetching end users");
         try {
         final String requestBody = mapper.writeValueAsString(EndUserRequestDto.builder().countryId(countryId).countyId(countyId).build());

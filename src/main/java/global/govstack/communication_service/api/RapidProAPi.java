@@ -32,6 +32,9 @@ public class RapidProAPi {
     @Value("${rapid-pro.token}")
     private String AUTH_TOKEN;
 
+    @Value("${rapid.pro.flow.id}")
+    private String FLOW_ID;
+
 
     public RapidProAPi(APIUtil apiUtil, ObjectMapper mapper) {
         this.apiUtil = apiUtil;
@@ -59,7 +62,7 @@ public class RapidProAPi {
         final InternalTextDto textDto = InternalTextDto.builder().description(broadcastMessage).build();
         try {
             return this.mapper.writeValueAsString(RapidProBroadcastRequestDto.builder()
-                    .flowUUID(flowUUID)
+                    .flowUUID(FLOW_ID)
                     .extra(textDto)
                     .urns(recipients.stream().map(EndUserResponseDto::phoneNumber).collect(Collectors.toList()))
                     .baseLanguage("eng")
