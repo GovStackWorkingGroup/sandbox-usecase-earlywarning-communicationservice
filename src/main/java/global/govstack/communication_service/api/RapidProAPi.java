@@ -49,8 +49,8 @@ public class RapidProAPi {
 
     }
 
-    public void sendMessage(String broadcastMessage, String flowUUID, List<EndUserResponseDto> recipients) {
-        final String broadcast = this.buildRapidProMessage(broadcastMessage, flowUUID, recipients);
+    public void sendMessage(String broadcastMessage, List<EndUserResponseDto> recipients) {
+        final String broadcast = this.buildRapidProMessage(broadcastMessage, recipients);
         try {
             log.info("Sending a message to RapidPro: {}", broadcast);
             httpHeaders.add("Authorization", String.format("Token %s", AUTH_TOKEN));
@@ -62,7 +62,7 @@ public class RapidProAPi {
         }
     }
 
-    private String buildRapidProMessage(String broadcastMessage, String flowUUID, List<EndUserResponseDto> recipients) {
+    private String buildRapidProMessage(String broadcastMessage, List<EndUserResponseDto> recipients) {
         log.info("Building RapidPro message");
         final InternalTextDto textDto = InternalTextDto.builder().description(broadcastMessage).build();
         try {

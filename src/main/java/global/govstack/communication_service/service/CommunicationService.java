@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -39,7 +40,11 @@ public class CommunicationService {
         log.info("Handling message from broadcast-topic: " + broadcastMessage);
         final IncomingBroadcastMessageDto broadcast = this.mapIncomingMessage(broadcastMessage);
         final List<EndUserResponseDto> endUsers = this.fetchEndUsersForBroadcast(broadcast.countryId(), broadcast.countyId());
-        this.buildAndSendLogEvents(broadcast.textPrimaryLang());
+        boolean canSend = false;
+        if (canSend) {
+            this.rapidProAPi.sendMessage(broadcast.textPrimaryLang(), endUsers);
+        }
+        this.buildAndSendLogEvents(broadcast.textPrimaryLang(), broadcast.broadcastId());
     }
 
     private List<EndUserResponseDto> fetchEndUsersForBroadcast(int countryId, List<Integer> countyId) {
@@ -52,10 +57,9 @@ public class CommunicationService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Mapping incoming message failed" + e);
         }
-
     }
 
-    private void buildAndSendLogEvents(String broadcastMessage) {
+    private void buildAndSendLogEvents(String broadcastMessage, String broadcastId) {
         log.info("sending to log topic");
         try {
             //simulate broadcast from IM
@@ -64,6 +68,7 @@ public class CommunicationService {
                     .to("Messaging BB")
                     .content("Received broadcast from Information Mediator")
                     .timeStamp(LocalDateTime.now())
+                    .broadcastId(broadcastId)
                     .build()));
             //simulate user service call
             this.publisher.publishServiceLogging(this.mapper.writeValueAsString(LogInfoDto.builder()
@@ -71,6 +76,7 @@ public class CommunicationService {
                     .to("User Service")
                     .content("Fetching broadcast recipients")
                     .timeStamp(LocalDateTime.now())
+                    .broadcastId(broadcastId)
                     .build()));
             //simulate message building
             this.publisher.publishServiceLogging(this.mapper.writeValueAsString(LogInfoDto.builder()
@@ -78,6 +84,7 @@ public class CommunicationService {
                     .to("Messaging BB")
                     .content("Preparing broadcast delivery based on recipient data")
                     .timeStamp(LocalDateTime.now())
+                    .broadcastId(broadcastId)
                     .build()));
             //simulate initialisation
             this.publisher.publishServiceLogging(this.mapper.writeValueAsString(LogInfoDto.builder()
@@ -85,16 +92,19 @@ public class CommunicationService {
                     .to("Recipients")
                     .content("Initiating end user delivery")
                     .timeStamp(LocalDateTime.now())
+                    .broadcastId(broadcastId)
                     .build()));
             //simulate delivery
             this.publisher.publishServiceLogging(this.mapper.writeValueAsString(LogInfoDto.builder()
                     .content("Broadcast sent")
                     .timeStamp(LocalDateTime.now())
+                    .broadcastId(broadcastId)
                     .build()));
             //send broadcast message content
             this.publisher.publishServiceLogging(this.mapper.writeValueAsString(LogInfoDto.builder()
                     .content(broadcastMessage)
                     .timeStamp(LocalDateTime.now())
+                    .broadcastId(broadcastId)
                     .build()));
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Mapping log messages failed" + e);
