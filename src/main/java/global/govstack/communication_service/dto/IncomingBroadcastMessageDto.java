@@ -10,5 +10,5 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record IncomingBroadcastMessageDto(String flowUUID, String broadcastTitle, int broadcastChannel,
                                           LocalDate startDate, LocalDate endDate, String textPrimaryLang,
-                                          String textSecondaryLang, int countryId, List<Integer> countyId) {
+                                          String textSecondaryLang, int countryId, List<Integer> countyId, String publisher) {
 }
