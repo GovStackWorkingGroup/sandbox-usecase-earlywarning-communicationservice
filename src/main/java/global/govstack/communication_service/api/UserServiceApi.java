@@ -17,7 +17,7 @@ import java.util.List;
 public class UserServiceApi {
 
     private final APIUtil apiUtil;
-    private  final ObjectMapper mapper;
+    private final ObjectMapper mapper;
     private final HttpHeaders httpHeaders;
 
     @Value("${user-service.url}")
@@ -33,13 +33,34 @@ public class UserServiceApi {
     public List<EndUserResponseDto> getEndUsers(int countryId, List<Integer> countyId) {
         log.info("Fetching end users");
         try {
-        final String requestBody = mapper.writeValueAsString(EndUserRequestDto.builder().countryId(countryId).countyId(countyId).build());
-            final ResponseEntity<String> response = this.apiUtil.callAPI(USER_SERVICE_URL + "/getEndUsersForCounty", HttpMethod.POST, httpHeaders,  requestBody, String.class);
+            final String requestBody = mapper.writeValueAsString(EndUserRequestDto.builder().countryId(countryId).countyId(countyId).build());
+            final ResponseEntity<String> response = this.apiUtil.callAPI(USER_SERVICE_URL + "/getEndUsersForCounty", HttpMethod.POST, httpHeaders, requestBody, String.class);
             log.info(response.getStatusCode().toString());
             log.info(response.getBody());
-            return mapper.readValue(response.getBody(), new TypeReference<>() {});
+            return mapper.readValue(response.getBody(), new TypeReference<>() {
+            });
         } catch (Exception ex) {
             log.error("Something went wrong with user-service cross-connection: " + ex.getMessage());
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+        }
+    }
+
+    public boolean checkUser(String userId) {
+        try {
+            this.restRequest(userId);
+            return Boolean.TRUE;
+        } catch (ResponseStatusException e) {
+            if (e.getStatusCode().equals(HttpStatus.SERVICE_UNAVAILABLE)) {
+                return Boolean.FALSE;
+            }
+            throw new RuntimeException("Communication to user-service failed");
+        }
+    }
+    private Object restRequest(String userId) {
+        try {
+            return this.apiUtil.callAPI(USER_SERVICE_URL + "/checkUser?userId=" + userId, HttpMethod.GET, httpHeaders, new HttpEntity<>(null), Void.class).getBody();
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
         }
     }

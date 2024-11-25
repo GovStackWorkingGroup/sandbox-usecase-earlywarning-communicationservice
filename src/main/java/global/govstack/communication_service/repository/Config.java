@@ -12,6 +12,6 @@ import lombok.Setter;
 @Table(name = "config")
 public class Config {
     @Id
-    private String config_key;
-    private String config_value;
+    private String key;
+    private String value;
 }

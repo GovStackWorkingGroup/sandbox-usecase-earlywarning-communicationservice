@@ -8,47 +8,42 @@ import global.govstack.communication_service.dto.EndUserResponseDto;
 import global.govstack.communication_service.dto.IncomingBroadcastMessageDto;
 import global.govstack.communication_service.dto.LogInfoDto;
 import global.govstack.communication_service.pub_sub.IMPublisher;
+import global.govstack.communication_service.repository.CommunicationRepository;
+import global.govstack.communication_service.repository.Config;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @Slf4j
-@PropertySource("classpath:.env")
+@RequiredArgsConstructor
 public class CommunicationService {
 
     private final RapidProAPi rapidProAPi;
     private final UserServiceApi userServiceApi;
     private final ObjectMapper mapper;
     private final IMPublisher publisher;
-    @Value("${USUUID}")
-    private String USUUID;
-
-    public CommunicationService(RapidProAPi rapidProAPi, UserServiceApi userServiceApi, ObjectMapper mapper, IMPublisher publisher) {
-        this.rapidProAPi = rapidProAPi;
-        this.userServiceApi = userServiceApi;
-        this.mapper = mapper;
-        this.publisher = publisher;
-    }
+    private final CommunicationRepository repository;
 
     public void handleIncomingBroadcastFromIM(String broadcastMessage) {
         log.info("Handling message from broadcast-topic: " + broadcastMessage);
         final IncomingBroadcastMessageDto broadcast = this.mapIncomingMessage(broadcastMessage);
-        final List<EndUserResponseDto> endUsers = this.fetchEndUsersForBroadcast(broadcast.countryId(), broadcast.countyId());
-        boolean canSend = false;
-        if (canSend) {
-            this.rapidProAPi.sendMessage(broadcast.textPrimaryLang(), endUsers);
+        final List<Config> settings = this.repository.findAll();
+        boolean checkUser = this.checkUser(broadcast.publisher());
+        if (checkUser && !settings.isEmpty() ) {
+            this.rapidProAPi.sendMessage(broadcast.textPrimaryLang(), settings);
         }
         this.buildAndSendLogEvents(broadcast.textPrimaryLang(), broadcast.broadcastId());
     }
 
     private List<EndUserResponseDto> fetchEndUsersForBroadcast(int countryId, List<Integer> countyId) {
         return this.userServiceApi.getEndUsers(countryId, countyId);
+    }
+    private boolean checkUser(String userId) {
+        return this.userServiceApi.checkUser(userId);
     }
 
     private IncomingBroadcastMessageDto mapIncomingMessage(String broadcastMessage) {
