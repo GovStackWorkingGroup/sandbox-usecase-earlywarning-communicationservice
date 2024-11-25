@@ -36,8 +36,8 @@ public class RapidProAPi {
     public void sendMessage(String broadcastMessage, List<Config> settings) {
         final Config flow = settings.stream().filter(s -> s.getKey().equalsIgnoreCase("FLOW_URL")).findFirst().orElseThrow(() -> new ConfigException("Flow url not found"));
         final Config flowId = settings.stream().filter(s -> s.getKey().equalsIgnoreCase("FLOW_ID")).findFirst().orElseThrow(() -> new ConfigException("Flow id not found"));
-        final Config phone =settings.stream().filter(s -> s.getKey().equalsIgnoreCase("PHONE")).findFirst().orElseThrow(() -> new ConfigException("Phone number not found"));
-        final Config token =settings.stream().filter(s -> s.getKey().equalsIgnoreCase("TOKEN")).findFirst().orElseThrow(() -> new ConfigException("Token not found"));
+        final Config phone = settings.stream().filter(s -> s.getKey().equalsIgnoreCase("PHONE")).findFirst().orElseThrow(() -> new ConfigException("Phone number not found"));
+        final Config token = settings.stream().filter(s -> s.getKey().equalsIgnoreCase("TOKEN")).findFirst().orElseThrow(() -> new ConfigException("Token not found"));
         final String broadcast = this.buildRapidProMessage(broadcastMessage, flowId.getValue(), phone.getValue());
         try {
             log.info("Sending a message to RapidPro: {}", broadcast);

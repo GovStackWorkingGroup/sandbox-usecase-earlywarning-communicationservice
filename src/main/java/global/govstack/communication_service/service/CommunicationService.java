@@ -33,7 +33,7 @@ public class CommunicationService {
         final IncomingBroadcastMessageDto broadcast = this.mapIncomingMessage(broadcastMessage);
         final List<Config> settings = this.repository.findAll();
         boolean checkUser = this.checkUser(broadcast.publisher());
-        if (checkUser && !settings.isEmpty() ) {
+        if (checkUser && !settings.isEmpty()) {
             this.rapidProAPi.sendMessage(broadcast.textPrimaryLang(), settings);
         }
         this.buildAndSendLogEvents(broadcast.textPrimaryLang(), broadcast.broadcastId());
@@ -42,6 +42,7 @@ public class CommunicationService {
     private List<EndUserResponseDto> fetchEndUsersForBroadcast(int countryId, List<Integer> countyId) {
         return this.userServiceApi.getEndUsers(countryId, countyId);
     }
+
     private boolean checkUser(String userId) {
         return this.userServiceApi.checkUser(userId);
     }
@@ -97,6 +98,7 @@ public class CommunicationService {
                     .build()));
             //send broadcast message content
             this.publisher.publishServiceLogging(this.mapper.writeValueAsString(LogInfoDto.builder()
+                    .to("mobile")
                     .content(broadcastMessage)
                     .timeStamp(LocalDateTime.now())
                     .broadcastId(broadcastId)
