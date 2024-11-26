@@ -30,7 +30,6 @@ public class RapidProAPi {
         this.mapper = mapper;
         httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-
     }
 
     public void sendMessage(String broadcastMessage, List<Config> settings) {
@@ -41,7 +40,7 @@ public class RapidProAPi {
         final String broadcast = this.buildRapidProMessage(broadcastMessage, flowId.getValue(), phone.getValue());
         try {
             log.info("Sending a message to RapidPro: {}", broadcast);
-            httpHeaders.add("Authorization", String.format("Token %s", token.getValue()));
+            httpHeaders.putIfAbsent("Authorization", Collections.singletonList(String.format("Token %s", token.getValue())));
             final String response = this.apiUtil.callAPI(flowUrl.getValue(), HttpMethod.POST, httpHeaders, broadcast, String.class).getBody();
             log.info(response);
         } catch (Exception ex) {
