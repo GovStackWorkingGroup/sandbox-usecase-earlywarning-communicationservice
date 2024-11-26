@@ -39,10 +39,6 @@ public class CommunicationService {
         this.buildAndSendLogEvents(broadcast.textPrimaryLang(), broadcast.broadcastId());
     }
 
-    private List<EndUserResponseDto> fetchEndUsersForBroadcast(int countryId, List<Integer> countyId) {
-        return this.userServiceApi.getEndUsers(countryId, countyId);
-    }
-
     private boolean checkUser(String userId) {
         return this.userServiceApi.checkUser(userId);
     }
