@@ -6,6 +6,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 public class UserServiceApi {
@@ -36,7 +38,7 @@ public class UserServiceApi {
 
     private void restRequest(String userId) {
         try {
-            this.apiUtil.callAPI(USER_SERVICE_URL + "/checkUser?userId=" + userId, HttpMethod.GET, httpHeaders, new HttpEntity<>(null), Void.class);
+            this.apiUtil.callAPI(USER_SERVICE_URL + "/checkUser?userId=" + UUID.fromString(userId), HttpMethod.GET, httpHeaders, new HttpEntity<>(null), Void.class);
         } catch (Exception ex) {
             log.error(ex.getMessage());
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());

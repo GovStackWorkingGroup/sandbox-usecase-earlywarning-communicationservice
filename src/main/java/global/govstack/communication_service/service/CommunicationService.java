@@ -36,9 +36,6 @@ public class CommunicationService {
         if (checkUser && !settings.isEmpty()) {
             this.rapidProAPi.sendMessage(broadcast.textPrimaryLang(), settings);
         }
-        //TODO REMOVE
-        log.info("user enabled: " + checkUser);
-        log.info("settings found: " + !settings.isEmpty());
         this.buildAndSendLogEvents(broadcast.textPrimaryLang(), broadcast.broadcastId());
     }
 
