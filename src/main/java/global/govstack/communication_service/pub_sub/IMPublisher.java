@@ -16,7 +16,6 @@ public class IMPublisher {
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     public void publishServiceLogging(String logInfoDto) {
-        log.info("Sending service logging to IM");
         try {
             this.kafkaTemplate.send(
                     LOGGING_TOPIC,

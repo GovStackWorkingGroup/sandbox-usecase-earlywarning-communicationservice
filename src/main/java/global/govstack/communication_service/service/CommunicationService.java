@@ -36,6 +36,9 @@ public class CommunicationService {
         if (checkUser && !settings.isEmpty()) {
             this.rapidProAPi.sendMessage(broadcast.textPrimaryLang(), settings);
         }
+        //TODO REMOVE
+        log.info("user enabled: " + checkUser);
+        log.info("settings found: " + !settings.isEmpty());
         this.buildAndSendLogEvents(broadcast.textPrimaryLang(), broadcast.broadcastId());
     }
 
@@ -52,7 +55,7 @@ public class CommunicationService {
     }
 
     private void buildAndSendLogEvents(String broadcastMessage, String broadcastId) {
-        log.info("sending to log topic");
+        log.info("Sending to log topic");
         try {
             //simulate broadcast from IM
             this.publisher.publishServiceLogging(this.mapper.writeValueAsString(LogInfoDto.builder()
