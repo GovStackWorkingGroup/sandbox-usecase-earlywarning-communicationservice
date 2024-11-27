@@ -33,6 +33,8 @@ public class CommunicationService {
         final IncomingBroadcastMessageDto broadcast = this.mapIncomingMessage(broadcastMessage);
         final List<Config> settings = this.repository.findAll();
         boolean checkUser = this.checkUser(broadcast.publisher());
+        log.info("user ok " + checkUser);
+        log.info("settings ok " + settings.isEmpty());
         if (checkUser && !settings.isEmpty()) {
             this.rapidProAPi.sendMessage(broadcast.textPrimaryLang(), settings);
         }
