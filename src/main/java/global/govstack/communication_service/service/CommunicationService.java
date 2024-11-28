@@ -37,8 +37,9 @@ public class CommunicationService {
         log.info("settings ok " + settings.isEmpty());
         if (checkUser && !settings.isEmpty()) {
             this.rapidProAPi.sendMessage(broadcast.textPrimaryLang(), settings);
+        } else {
+            this.buildAndSendLogEvents(broadcast.textPrimaryLang(), broadcast.broadcastId());
         }
-        this.buildAndSendLogEvents(broadcast.textPrimaryLang(), broadcast.broadcastId());
     }
 
     private boolean checkUser(String userId) {
