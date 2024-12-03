@@ -2,11 +2,11 @@ package global.govstack.communication_service.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import global.govstack.communication_service.dto.EndUserResponseDto;
 import global.govstack.communication_service.dto.InternalTextDto;
 import global.govstack.communication_service.dto.RapidProBroadcastRequestDto;
+import global.govstack.communication_service.exception.ConfigException;
+import global.govstack.communication_service.repository.Config;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -26,30 +25,23 @@ public class RapidProAPi {
     private final APIUtil apiUtil;
     private final ObjectMapper mapper;
 
-    @Value("${rapid-pro.flow.url}")
-    private String RAPID_PRO_FLOW_URL;
-
-    @Value("${rapid-pro.token}")
-    private String AUTH_TOKEN;
-
-    @Value("${rapid.pro.flow.id}")
-    private String FLOW_ID;
-
-
     public RapidProAPi(APIUtil apiUtil, ObjectMapper mapper) {
         this.apiUtil = apiUtil;
         this.mapper = mapper;
         httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-
     }
 
-    public void sendMessage(String broadcastMessage, String flowUUID, List<EndUserResponseDto> recipients) {
-        final String broadcast = this.buildRapidProMessage(broadcastMessage, flowUUID, recipients);
+    public void sendMessage(String broadcastMessage, List<Config> settings) {
+        final Config flowUrl = settings.stream().filter(s -> s.getKey().equalsIgnoreCase("FLOW_URL")).findFirst().orElseThrow(() -> new ConfigException("Flow url not found"));
+        final Config flowId = settings.stream().filter(s -> s.getKey().equalsIgnoreCase("FLOW_ID")).findFirst().orElseThrow(() -> new ConfigException("Flow id not found"));
+        final Config phone = settings.stream().filter(s -> s.getKey().equalsIgnoreCase("PHONE")).findFirst().orElseThrow(() -> new ConfigException("Phone number not found"));
+        final Config token = settings.stream().filter(s -> s.getKey().equalsIgnoreCase("TOKEN")).findFirst().orElseThrow(() -> new ConfigException("Token not found"));
+        final String broadcast = this.buildRapidProMessage(broadcastMessage, flowId.getValue(), phone.getValue());
         try {
-            log.info("Sending a message to RapidPro:  {}", broadcast);
-            httpHeaders.add("Authorization", String.format("Token %s", AUTH_TOKEN));
-            final String response = this.apiUtil.callAPI(RAPID_PRO_FLOW_URL, HttpMethod.POST, httpHeaders, broadcast, String.class).getBody();
+            log.info("Sending a message to RapidPro: {}", broadcast);
+            httpHeaders.putIfAbsent("Authorization", Collections.singletonList(String.format("Token %s", token.getValue())));
+            final String response = this.apiUtil.callAPI(flowUrl.getValue(), HttpMethod.POST, httpHeaders, broadcast, String.class).getBody();
             log.info(response);
         } catch (Exception ex) {
             log.error(ex.getMessage());
@@ -57,14 +49,14 @@ public class RapidProAPi {
         }
     }
 
-    private String buildRapidProMessage(String broadcastMessage, String flowUUID, List<EndUserResponseDto> recipients) {
+    private String buildRapidProMessage(String broadcastMessage, String flowId, String phoneNumber) {
         log.info("Building RapidPro message");
         final InternalTextDto textDto = InternalTextDto.builder().description(broadcastMessage).build();
         try {
             return this.mapper.writeValueAsString(RapidProBroadcastRequestDto.builder()
-                    .flowUUID(FLOW_ID)
+                    .flowUUID(flowId)
                     .extra(textDto)
-                    .urns(recipients.stream().map(EndUserResponseDto::phoneNumber).collect(Collectors.toList()))
+                    .urns(Collections.singletonList(phoneNumber))
                     .baseLanguage("eng")
                     .groups(Collections.emptyList())
                     .contacts(Collections.emptyList())
