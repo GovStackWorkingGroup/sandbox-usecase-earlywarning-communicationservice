@@ -57,6 +57,14 @@ public class CommunicationService {
     private void buildAndSendLogEvents(String broadcastMessage, String broadcastId) {
         log.info("Sending to log topic");
         try {
+            //simulate broadcast from threat service
+            this.publisher.publishServiceLogging(this.mapper.writeValueAsString(LogInfoDto.builder()
+                    .from("Threat Service")
+                    .to("Information Mediator BB")
+                    .content("Broadcast sent to Information Mediator")
+                    .timeStamp(LocalDateTime.now())
+                    .broadcastId(broadcastId)
+                    .build()));
             //simulate broadcast from IM
             this.publisher.publishServiceLogging(this.mapper.writeValueAsString(LogInfoDto.builder()
                     .from("Information Mediator BB")
